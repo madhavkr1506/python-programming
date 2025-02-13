@@ -16,7 +16,7 @@ import pandas as pd
 # data = pd.DataFrame(data)
 # print(data)
 
-data = pd.read_csv("C:\\Users\\madha\\Documents\\netflix_titles.csv")
+# data = pd.read_csv("C:\\Users\\madha\\Documents\\netflix_titles.csv")
 # print(data)
 
 
@@ -52,4 +52,38 @@ data = pd.read_csv("C:\\Users\\madha\\Documents\\netflix_titles.csv")
 # plt.show()
 
 
+# Use read_csv() with parameters like chunksize for large files.
 
+# data = pd.read_csv("C:\\Users\\madha\\Documents\\netflix_titles.csv", chunksize=1000)
+# for chunk in data :
+    # print(chunk.head())
+
+
+# df = pd.DataFrame({
+#     'City': ['New York', 'New York', 'London', 'London'],
+#     'Year': [2020, 2021, 2020, 2021],
+#     'Population': [8.3, 8.4, 9.3, 9.4]
+# })
+
+# df = df.set_index(["City","Year"])
+
+# Ab hum City aur Year columns ko index bana rahe hain.
+
+# Index ka kaam hota hai ki DataFrame me rows ko uniquely identify kar sakein.
+# set_index(['City', 'Year']) ka matlab hai:
+# City aur Year ko ek hierarchical index bana diya.
+# Pehle level pe City hoga, aur uske andar Year.
+
+# Ab hum df.loc[] ka use karke rows ko access karte hain.
+# print(df.loc["New York"])
+
+
+df = pd.DataFrame({
+    'Team': ['A', 'A', 'B', 'B'],
+    'Score': [10, 20, 15, 25],
+    'Penalties': [1, 2, 0, 1]
+})
+
+df = df.groupby("Team")
+df = df.agg({"Score" : ["mean","max"], "Penalties" : "sum"})
+print(df)
