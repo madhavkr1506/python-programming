@@ -87,3 +87,5 @@ df = pd.DataFrame({
 df = df.groupby("Team")
 df = df.agg({"Score" : ["mean","max"], "Penalties" : "sum"})
 print(df)
+
+

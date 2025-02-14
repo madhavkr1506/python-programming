@@ -36,6 +36,7 @@ description_column = data["description"].dropna().head()
 for i in range(len(description_column)):
     print(f"description: {description_column.iloc[i]}")
     print(f"sentiment analysis: {analyzeSentiment(description_column.iloc[i])}")
+    print()
 
 
 
