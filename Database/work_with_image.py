@@ -18,6 +18,7 @@ class DB_Util:
             }
         except Exception as e:
             print(f"An exception has occured: {e}")
+            return None
 
     @staticmethod
     def create_table(table_query, cursor_object, connection):
@@ -30,9 +31,9 @@ class DB_Util:
             print('An exception has occured')
 
     @staticmethod
-    def insert_into_table(insert_query, cursor_object, connection):
+    def insert_into_table(insert_query, cursor_object, connection, data):
         try:
-            cursor_object.execute(insert_query)
+            cursor_object.execute(insert_query, data)
             connection.commit()
             print("insert query has been executed")
             return
@@ -40,7 +41,7 @@ class DB_Util:
             print(f'An exception as occured: {e}')
     
     @staticmethod
-    def view_query(view_query, cursor_object, connection):
+    def view_query(view_query, cursor_object):
         try:
             cursor_object.execute(view_query)
             print("view query has been executed")
@@ -70,13 +71,39 @@ class DB:
         logger.info(f"In this section of code i am trying to create table in {self.database} database")
         DB_Util.create_table(table_query, cursor_object, connection)
     
-    def insert_into_table(self, insert_query, cursor_object, connection):
+    def insert_into_table(self, insert_query, cursor_object, connection, data):
         logger.info(f"In this section of code i am trying to return database")
-        DB_Util.insert_into_table(insert_query, cursor_object, connection)
+        DB_Util.insert_into_table(insert_query, cursor_object, connection, data)
 
-    def view_query(self, view_query, cursor_object, connection):
+    def view_query(self, view_query, cursor_object):
         logger.info(f"In this section of code i am trying to view table")
-        DB_Util.view_query(view_query, cursor_object, connection)
+        DB_Util.view_query(view_query, cursor_object)
+
+
+class ImgProcessing:
+    def __init__(self, image_path):
+        self.image_path = image_path
+    
+    def get_image_path(self):
+        return self.image_path
+    
+    def process_image(self):
+        logger.info("In this section of code i am trying to get image in bytes form")
+        image_bytes = ImageProcessing_Util.process_image(self.image_path)
+        return image_bytes
+
+class ImageProcessing_Util:
+    
+    @staticmethod
+    def process_image(image_path):
+        try:
+            with open(image_path, mode='rb') as binary_file:
+                bytes_data = binary_file.read()
+                return bytes_data
+        except FileNotFoundError as file_error:
+            print(f"File Not found error: {file_error}")
+            return None
+
 
 
 db = DB("School.db")
@@ -90,8 +117,13 @@ cursor_object = object_["cursor"]
 table_query = str(input("here you have to write create table query: "))
 db.create_table(table_query, cursor_object, connection)
 
-insert_query = str(input("\nhere you have to insert row in table: "))
-db.insert_into_table(insert_query, cursor_object, connection)
+image_path = "C:\\Users\\makumar2502\\Documents\\Database\\Screenshot.png"
+
+image_processing_object = ImgProcessing(image_path)
+image_bytes = image_processing_object.process_image()
+
+insert_query = str(input("here you have to write insert query: "))
+db.insert_into_table(insert_query, cursor_object, connection, ('screenshot1', image_bytes))
 
 view_query = str(input("here you have to write view query: "))
-db.view_query(view_query, cursor_object, connection)
+db.view_query(view_query, cursor_object)
