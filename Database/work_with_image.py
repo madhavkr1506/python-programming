@@ -6,6 +6,7 @@ logging.basicConfig(filename="logging.log", filemode="w", format="%(asctime)s %(
 logger = logging.getLogger()
 
 class DB_Util:
+    @staticmethod
     def create_connection(database_name):
         try:
             connection = sqlite3.connect(database=database_name)
@@ -18,6 +19,7 @@ class DB_Util:
         except Exception as e:
             print(f"An exception has occured: {e}")
 
+    @staticmethod
     def create_table(table_query, cursor_object, connection):
         try:
             cursor_object.execute(table_query)
@@ -27,6 +29,7 @@ class DB_Util:
         except Exception as e:
             print('An exception has occured')
 
+    @staticmethod
     def insert_into_table(insert_query, cursor_object, connection):
         try:
             cursor_object.execute(insert_query)
@@ -36,13 +39,14 @@ class DB_Util:
         except Exception as e:
             print(f'An exception as occured: {e}')
     
-    
+    @staticmethod
     def view_query(view_query, cursor_object, connection):
         try:
             cursor_object.execute(view_query)
-            connection.commit()
             print("view query has been executed")
-            return
+            rows = cursor_object.fetchall()
+            for row in rows:
+                print(row)
         except Exception as e:
             print(f'An exception as occured: {e}')
 
@@ -57,9 +61,9 @@ class DB:
         logger.info(f"In this section of code i am trying to return database")
         return self.database
     
-    def create_connection(self, database):
+    def create_connection(self):
         logger.info(f"In this section of code i am trying to create connection and getting cursor_object")
-        object_ = DB_Util.create_connection(database)
+        object_ = DB_Util.create_connection(self.database)
         return object_
     
     def create_table(self, table_query, cursor_object, connection):
@@ -78,7 +82,7 @@ class DB:
 db = DB("School.db")
 
 database = db.get_database()
-object_ = db.create_connection(database)
+object_ = db.create_connection()
 
 connection = object_["connection"]
 cursor_object = object_["cursor"]
@@ -89,5 +93,5 @@ db.create_table(table_query, cursor_object, connection)
 insert_query = str(input("\nhere you have to insert row in table: "))
 db.insert_into_table(insert_query, cursor_object, connection)
 
-view_query = str(input("here you have to write view query"))
+view_query = str(input("here you have to write view query: "))
 db.view_query(view_query, cursor_object, connection)
