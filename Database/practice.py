@@ -44,10 +44,10 @@ class CreateWavFile:
         connection = sqlite3.connect(db_filename)
         cursor_object = connection.cursor()
 
-        cursor_object.execute("CREATE TABLE IF NOT EXISTS signature_collector (file_name TEXT PRIMARY KEY, signature TEXT)")
+        cursor_object.execute("create table if not exists signature_collector (file_name text primary key, signature text)")
         signature = self.generate_signature()
         if signature:
-            cursor_object.execute("INSERT OR REPLACE INTO signature_collector (file_name, signature) VALUES (?, ?)", (self.file_name, signature))
+            cursor_object.execute("insert or replace into signature_collector (file_name, signature) values (?, ?)", (self.file_name, signature))
             connection.commit()
             print(f"Signature for '{self.file_name}' stored in database.")
         connection.close()
@@ -57,3 +57,34 @@ wav_file_object.set_parameter(44100, 440.0, 2.0)
 wav_file_object.write_in_file()
 wav_file_object.write_signature_in_file(wav_file_object.generate_signature())
 wav_file_object.store_signature_in_db()
+
+import sqlite3
+import hashlib
+
+def verify_signature(wav_file, signature_file):
+    try:
+        connection = sqlite3.connect("s3_bucket.db")
+        cursor_object = connection.cursor()
+
+        with open(wav_file, mode='rb') as wav_file_read:
+            read_bytes = wav_file_read.read()
+            calculated_signature = hashlib.sha256(read_bytes).hexdigest()
+
+        cursor_object.execute("select signature FROM signature_collector where file_name = ?", (wav_file,))
+        stored_signature_tuple = cursor_object.fetchone()
+        connection.close()
+
+        if stored_signature_tuple:
+            stored_signature = stored_signature_tuple[0] 
+
+            if stored_signature == calculated_signature:
+                print("Signature matched")
+            else:
+                print("Signature not matched")
+        else:
+            print(f"Signature for '{wav_file}' not found in database.")
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+verify_signature("Wave1001.wav", "Wave1001_sig.txt")
