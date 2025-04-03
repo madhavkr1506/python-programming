@@ -13,6 +13,20 @@ def function1(index, list1):
 
 print(function1(0, [[2,2],[3,1],[1,4]]))
 
+def function2(list1):
+    def index_helper(index):
+        if(index >= len(list1)):
+            return 0
+        include = list1[index][0] + index_helper(index + list1[index][1] + 1)
+        exclude = index_helper(index + 1)
+
+        return max(include, exclude)
+
+    return index_helper(0)
+
+
+print(function2([[2,2],[3,1],[1,4]]))
+
 
 # dynamic programming approach: time complexity: O(n) and space complexity is O(n)
 
