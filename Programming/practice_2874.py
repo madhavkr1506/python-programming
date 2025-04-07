@@ -11,11 +11,11 @@ def function1(array):
     j_max = [0] * len_
     j_max[-1] = array[-1]
     for j in range(len_-2, -1, -1):
-        j_max[i] = (max(j_max[j + 1], array[j]))
+        j_max[j] = (max(j_max[j + 1], array[j]))
 
     max_value = -math.inf
-    for i in range(1, len_ - 2, 1):
-        max_value = max(i_max[i - 1] - array[i] * j_max[i + 1], max_value)
+    for i in range(1, len_ - 1, 1):
+        max_value = max((i_max[i - 1] - array[i]) * j_max[i + 1], max_value)
 
     print(max_value)
 
