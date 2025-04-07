@@ -1,5 +1,7 @@
 import math
 
+# time complexity: O(N) and space complexity: O(N)
+
 def function1(array):
     len_ = len(array)
     i_max = [0] * len_
