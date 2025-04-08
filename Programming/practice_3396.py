@@ -1,8 +1,10 @@
 import numpy as np
 
+# time complexity: O(N log N) and space complexity: O(N)
+
 def check_duplicate(array):
     found = False
-    np_array = np.array([array]).sort()
+    array = sorted(array)
     for i in range(1, len(array)):
         if array[i] == array[i - 1]:
             found = True
@@ -19,7 +21,7 @@ def make_unique(array):
     while(found != False):
         count = count + 1
         for i in range(0, 3):
-            array.pop(i)
+            array.pop(0)
         if len(array) < 3:
             return count
         found = check_duplicate(array)
