@@ -1,0 +1,6 @@
+sounddevice
+numpy
+scipy
+matplotlib
+pydub
+SpeechRecognition
