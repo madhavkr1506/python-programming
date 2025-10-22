@@ -64,7 +64,7 @@ def identify_audio():
 
         with sr.AudioFile("harvard.wav") as source:
             audio = recog.record(source=source, duration=60)
-            text = recog.recognize_google(audio, language="en-IN")
+            text = recog.recognize_google(audio, language="en-US")
             print(f"\ndetected speech: {text}")
     except Exception as e:
         raise Exception(f"failed to identify audio \nproblem: {e}")
