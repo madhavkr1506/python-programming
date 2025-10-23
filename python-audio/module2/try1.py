@@ -19,7 +19,7 @@ class VoiceAssistance:
 
         self.audio_captured = False
 
-        self.wav_audio = "audio.wav"
+        self.wav_audio = "harvard.wav"
 
         self.audio_adjusted = False
 
@@ -83,7 +83,7 @@ class VoiceAssistance:
             self.log.info(f"audio data received: {data}")
 
             if self.audio_adjusted:
-                frame_size = int(self.sample_frequency * self.frame_duration)
+                frame_size = int(self.freq_adjusted * self.frame_duration)
 
                 self.log.info(f"Length of data: {len(data)}\nFrame size: {frame_size}")
                 
@@ -91,18 +91,37 @@ class VoiceAssistance:
                 for i in range(0, len(data), frame_size):
                     frame = data[i:i+frame_size]
                     # self.log.info(f"Frame type: {type(frame)}\nLength of frame: {len(frame)}")
-                    if len(frame == frame_size):
+                    if len(frame) == frame_size:
                         frames.append(frame)
 
             def find_root_mean_square():
                 try:
-                    rms_mean = [np.sqrt(np.mean(frame.astype(float) ** 2)) for frame in frames]
+                    rms_energy = [np.sqrt(np.mean(frame.astype(float) ** 2)) for frame in frames]
                     # self.log.info(f"Root Mean Square: {rms_mean}")
-                    return rms_mean
+                    return rms_energy
                 except Exception as e:
                     raise Exception(f"failed! can't identify power in speech\nproblem: {e}")
-            rms_mean = find_root_mean_square()
+            rms_energy = find_root_mean_square()
 
+            threshold = np.mean(rms_energy) * 1.2
+
+            self.log.info(f"Threshold value: {threshold}")
+
+            def speech_frame():
+                try:
+                    speech_flags = [1 if e > threshold else 0 for e in rms_energy]
+
+                    speech_frames = [frames[i] for i in range(len(frames)) if speech_flags[i] == 1]
+                    self.log.info(f"Speech frames length: {len(speech_frames)}")
+                    speech_audio = np.concatenate(speech_frames)
+                    self.log.info(f"Speech audio length: {len(speech_audio)}")
+                    return speech_audio
+                except Exception as e:
+                    raise Exception(f"failed! speech frame detection\nproblem: {e}")
+            speech_audio = speech_frame()
+
+            write("speech_audio.wav", self.freq_adjusted, speech_audio.astype(np.int16))
+            self.log.info(f"Speech-only audio saved as speech_audio.wav")
 
         except Exception as e:
             raise Exception(f"failed! can't detect voice activity\nproblem: {e}")
@@ -111,8 +130,8 @@ class VoiceAssistance:
 def main():
     try:
         vs = VoiceAssistance()
-        vs.capture_audio()
-        vs.save_captured_audio()
+        # vs.capture_audio()
+        # vs.save_captured_audio()
         vs.voice_activity_detection()
     except Exception as e:
         print(f"Message: {e}")
