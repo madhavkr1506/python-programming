@@ -5,7 +5,7 @@ from pydub import AudioSegment
 import numpy as np
 from datetime import datetime as dt
 import logging
-# Thanks Madhav Kumar
+
 class VoiceAssistance:
     def __init__(self):
         logging.basicConfig(level=logging.INFO)
