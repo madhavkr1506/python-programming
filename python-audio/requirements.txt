@@ -4,3 +4,9 @@ scipy
 matplotlib
 pydub
 SpeechRecognition
+
+librosa # audio processing(mfcc)
+soundfile # (reading wav file)
+
+sqlalchemy
+pymysql

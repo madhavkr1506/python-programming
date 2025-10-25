@@ -1,10 +1,13 @@
 import sounddevice as sd
 from scipy.io.wavfile import read, write
 from pydub import AudioSegment
-
+import librosa
 import numpy as np
 from datetime import datetime as dt
 import logging
+
+from dbconnection import DBConnection
+from handle_query import PrepareQuery
 
 class VoiceAssistance:
     def __init__(self):
@@ -28,6 +31,10 @@ class VoiceAssistance:
 
         self.frame_duration = 0.02
 
+        self.conn = DBConnection()
+        self.queries = PrepareQuery()
+
+        self.curr_query = None
 
 
     def capture_audio(self):
@@ -126,13 +133,76 @@ class VoiceAssistance:
         except Exception as e:
             raise Exception(f"failed! can't detect voice activity\nproblem: {e}")
         
+    def speaker_identification_and_feature_extraction(self):
+        try:
+            '''
+                feature extraction:
+                    1. every sound will have there own fingerprint
+                    2. convert sound fingerprint into numbers (features)
+                    3. use mfcc (mel-frequency cepstral coefficient) for conversion
+                    4. these fetures will tell about sound energy, sound tone and sound frequency.
+                
+                voice embedding / feature vectors:
+                    1. build fixed length vector after combining mfcc values.
+                    2. this will be speaker identity in numerical representation.
+
+                speaker database:
+                    1. save feature vector in a database
+                
+                speaker matching:
+                    1. whenever new voice sample will be recorded, extract its feature vector and compare distance(similarity) with vector store in database.
+                    2. speaker having nearest distance will be the real one.
+
+            '''
+
+            audio, sr = librosa.load("speech_audio.wav", sr=16000, mono=True)
+
+            print(f"audio loaded: {audio.shape}\tsample rate: {sr}")
+
+            mfcc = librosa.feature.mfcc(y=audio, sr=sr, n_mfcc=13)
+
+            print(f"mfcc shape: {mfcc.shape}")
+
+            mfcc_mean = np.mean(mfcc, axis=1)
+            print(f"mfcc mean vector: {mfcc_mean}")
+
+
+        except Exception as e:
+            raise Exception(f"failed to identify speaker identity {e}")
+        
+    def get_query(self):
+        try:
+            pass
+        except Exception as e:
+            raise Exception(f"{e}")
+    
+    def handle_database(self):
+        try:
+            self.queries.show_grants_query()
+            self.curr_query = self.queries.show_grants
+            self.conn.create_session()
+            session = self.conn.session
+            if len(session.info) > 0:
+                response = session.execute(self.curr_query)
+                if response:
+                    rows = response.all()
+                    print(f"fetched rows:\n")
+                    for row in rows:
+                        print(row)
+                session.commit()
+        except Exception as e:
+            if session:
+                session.rollback()
+            raise Exception(f"{e}")
 
 def main():
     try:
         vs = VoiceAssistance()
         # vs.capture_audio()
         # vs.save_captured_audio()
-        vs.voice_activity_detection()
+        # vs.voice_activity_detection()
+        # vs.speaker_identification_and_feature_extraction()
+        vs.handle_database()
     except Exception as e:
         print(f"Message: {e}")
 
