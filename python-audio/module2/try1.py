@@ -6,6 +6,8 @@ import numpy as np
 from datetime import datetime as dt
 import logging
 
+from sqlalchemy import Insert
+
 from dbconnection import DBConnection
 from handle_query import PrepareQuery
 
@@ -23,6 +25,7 @@ class VoiceAssistance:
         self.audio_captured = False
 
         self.wav_audio = "harvard.wav"
+        self.speech_audio = "speech_audio.wav"
 
         self.audio_adjusted = False
 
@@ -36,6 +39,9 @@ class VoiceAssistance:
 
         self.curr_query = None
 
+        self.mfcc_mean = None
+
+
 
     def capture_audio(self):
         try:
@@ -47,7 +53,7 @@ class VoiceAssistance:
             self.log.info(f"Capture system done its execution")
 
         except Exception as e:
-            raise Exception(f"failed! capture audio system\nproblem: {e}")
+            raise Exception(f"Failed! capture audio system\nproblem: {e}")
         
     def save_captured_audio(self):
         try:
@@ -56,7 +62,7 @@ class VoiceAssistance:
                 self.log.info("Captured audio save successfully")
 
         except Exception as e:
-            raise Exception(f"failed! can't save captured audio\nproblem: {e}")
+            raise Exception(f"Failed! can't save captured audio\nproblem: {e}")
         
     def voice_activity_detection(self):
         try:
@@ -66,7 +72,7 @@ class VoiceAssistance:
                     sound = sound.set_channels(self.channels_adjusted).set_frame_rate(self.freq_adjusted)
                     sound.export(self.wav_audio, format="wav")
 
-                    self.log.info(f"sound sample rate adjusted to: {sound.frame_rate}Hz\nsound channels adjusted to: {sound.channels}")
+                    self.log.info(f"Sound sample rate adjusted to: {sound.frame_rate}Hz\nsound channels adjusted to: {sound.channels}")
 
                     if sound.channels > 1:
                         self.audio_adjusted = False
@@ -74,7 +80,7 @@ class VoiceAssistance:
                     self.audio_adjusted = True
                     
                 except Exception as e:
-                    raise Exception(f"failed! can't adjust audio\nproblem: {e}")
+                    raise Exception(f"Failed! can't adjust audio\nproblem: {e}")
             adjust_audio()
 
             def read_wav() -> np.array:
@@ -83,11 +89,11 @@ class VoiceAssistance:
                     if isinstance(data, np.ndarray):
                         return data
                     else:
-                        raise Exception("invalid data type found, not a numpy array")
+                        raise Exception("Invalid data type found, not a numpy array")
                 except Exception as e:
-                    raise Exception(f"failed! can't read audio file\nproblem: {e}")
+                    raise Exception(f"Failed! can't read audio file\nproblem: {e}")
             data = read_wav()
-            self.log.info(f"audio data received: {data}")
+            self.log.info(f"Audio data received: {data}")
 
             if self.audio_adjusted:
                 frame_size = int(self.freq_adjusted * self.frame_duration)
@@ -107,7 +113,7 @@ class VoiceAssistance:
                     # self.log.info(f"Root Mean Square: {rms_mean}")
                     return rms_energy
                 except Exception as e:
-                    raise Exception(f"failed! can't identify power in speech\nproblem: {e}")
+                    raise Exception(f"Failed! can't identify power in speech\nproblem: {e}")
             rms_energy = find_root_mean_square()
 
             threshold = np.mean(rms_energy) * 1.2
@@ -124,14 +130,14 @@ class VoiceAssistance:
                     self.log.info(f"Speech audio length: {len(speech_audio)}")
                     return speech_audio
                 except Exception as e:
-                    raise Exception(f"failed! speech frame detection\nproblem: {e}")
+                    raise Exception(f"Failed! speech frame detection\nproblem: {e}")
             speech_audio = speech_frame()
 
-            write("speech_audio.wav", self.freq_adjusted, speech_audio.astype(np.int16))
-            self.log.info(f"Speech-only audio saved as speech_audio.wav")
+            write(self.speech_audio, self.freq_adjusted, speech_audio.astype(np.int16))
+            self.log.info(f"Speech-only audio saved as {self.speech_audio}")
 
         except Exception as e:
-            raise Exception(f"failed! can't detect voice activity\nproblem: {e}")
+            raise Exception(f"Failed! can't detect voice activity\nproblem: {e}")
         
     def speaker_identification_and_feature_extraction(self):
         try:
@@ -157,51 +163,69 @@ class VoiceAssistance:
 
             audio, sr = librosa.load("speech_audio.wav", sr=16000, mono=True)
 
-            print(f"audio loaded: {audio.shape}\tsample rate: {sr}")
+            print(f"Audio Loaded: {audio.shape}\tSample Rate: {sr}")
 
             mfcc = librosa.feature.mfcc(y=audio, sr=sr, n_mfcc=13)
 
-            print(f"mfcc shape: {mfcc.shape}")
+            print(f"MFCC Shape: {mfcc.shape}")
 
             mfcc_mean = np.mean(mfcc, axis=1)
-            print(f"mfcc mean vector: {mfcc_mean}")
+            self.mfcc_mean = mfcc_mean
+            print(f"MFCC Mean Vector: {self.mfcc_mean}")
 
 
         except Exception as e:
-            raise Exception(f"failed to identify speaker identity {e}")
+            raise Exception(f"Failed to identify speaker identity {e}")
         
-    def get_query(self):
+    def get_query(self, instance, values = None):
+        query = None
         try:
-            pass
+            match instance:
+                case 'grants':
+                    self.queries.show_grants_query()
+                    query = self.queries.show_grants
+                    self.curr_query = query
+                case 'insert':
+                    self.queries.prepare_insert(values=values)
+                    query = self.queries.insert
+                    self.curr_query = query
+
         except Exception as e:
             raise Exception(f"{e}")
     
     def handle_database(self):
         try:
-            self.queries.show_grants_query()
-            self.curr_query = self.queries.show_grants
+            values = self.prepare_values_for_insert(name="AI Voice", mfcc=self.mfcc_mean)
+            self.get_query('insert', values=values)
             self.conn.create_session()
             session = self.conn.session
             if len(session.info) > 0:
                 response = session.execute(self.curr_query)
-                if response:
-                    rows = response.all()
-                    print(f"fetched rows:\n")
-                    for row in rows:
-                        print(row)
+                if response and isinstance(self.curr_query, Insert):
+                    rowcount = response.rowcount
+                    print(f"Insert operation done successfully\nReturn row count: {rowcount}")
                 session.commit()
         except Exception as e:
             if session:
                 session.rollback()
             raise Exception(f"{e}")
+        
+    def prepare_values_for_insert(self, name = None, mfcc = None):
+        try:
+            return {
+                "speaker_name" : name,
+                "speaker_mfcc" : mfcc
+            }
+        except Exception as e:
+            raise Exception(f"Failed to prepare values for insert\nproblem: {e}")
 
 def main():
     try:
         vs = VoiceAssistance()
-        # vs.capture_audio()
-        # vs.save_captured_audio()
-        # vs.voice_activity_detection()
-        # vs.speaker_identification_and_feature_extraction()
+        vs.capture_audio()
+        vs.save_captured_audio()
+        vs.voice_activity_detection()
+        vs.speaker_identification_and_feature_extraction()
         vs.handle_database()
     except Exception as e:
         print(f"Message: {e}")

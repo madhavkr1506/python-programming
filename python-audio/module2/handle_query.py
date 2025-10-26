@@ -24,9 +24,12 @@ class PrepareQuery:
         except Exception as e:
             raise Exception(f"failed to prepare select query\nproblem: {e}")
     
-    def prepare_insert(self):
+    def prepare_insert(self, values):
         try:
-            pass
+            query = insert(
+                VoiceAssistance
+            ).values(**values)
+            self.insert = query
         except Exception as e:
             raise Exception(f"failed to prepare insert query\nproblem: {e}")
     
