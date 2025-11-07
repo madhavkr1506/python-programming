@@ -2,7 +2,8 @@ def main():
     try:
         def create_linked_list():
             try:
-                node = Node(1)
+                head = Node(1)
+                print(f"head node value: ", head.value)
             except Exception as e:
                 raise Exception(str(e))
     except Exception as e:
