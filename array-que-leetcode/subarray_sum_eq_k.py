@@ -1,39 +1,24 @@
 from collections import defaultdict
 def main():
     try:
-        # def countSubarraySum(arr : list, k : int) -> int: #TC: O(N^2)
-        #     try:
-        #         n = len(arr)
-        #         count = 0
-
-        #         for i in range(n):
-        #             sum = 0
-        #             for j in range(i, n):
-        #                 sum += arr[j]
-        #                 if sum == k:
-        #                     count+=1
-        #         return count
-        #     except Exception as e:
-        #         raise Exception(f"{str(e)}")
-        # count = countSubarraySum([1,1,1], 2)
-        # print(f"count: {count}")
-
-
-        def countSubarraySum(arr : list[int], k : int) -> int: #TC: O(N)
+        def rangeSumQueries(arr : list[int], range : list[int]) -> list: #TC: O(N)
             try:
-                count = 0
-                pref_count = defaultdict(int)
-                pref_count[0] = 1
+                pref_sum = [0] * len(arr)
                 curr = 0
-                for x in arr:
+
+                for i, x in enumerate(arr, start=0):
                     curr += x
-                    count += pref_count[curr-k]
-                    pref_count[curr] += 1
-                return count
+                    pref_sum[i] = curr
+
+                left, right = range
+                if left == 0:
+                    return pref_sum[right]
+                return pref_sum[right] - pref_sum[left - 1]     
+
             except Exception as e:
                 raise Exception(f"{str(e)}")
-        count = countSubarraySum([1,1,1], 2)
-        print(f"count: {count}")
+        sum = rangeSumQueries([1,2,3,4,5], [1,3])
+        print(f"sum: {sum}")
 
         
     except Exception as e:
