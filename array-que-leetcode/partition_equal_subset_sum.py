@@ -22,7 +22,7 @@ def partitionEqualSubsetSum(): # TC: O(N * Target) and SC: O(Target)
                 # print(f"Index decrement: {-1}")
                 if truth[a-ele]:
                     print(f"Element truth1: {truth[ele]}")
-                    truth[ele] = True
+                    truth[a] = True
                     print(f"Element: {ele}")
                     print(f"Element truth2: {truth[ele]}")
                     print(f"Updated truth array: {truth}")
