@@ -154,7 +154,7 @@ class Compression:
                             print(f"Video size before compression: {fileSizeBeforeCompression}")
                             
                             videoCompressionCmd = ["ffmpeg", "-y", "-hide_banner", "-loglevel", "error", "-i", inputPath, "-vcodec", "libx264", "-crf", "28", "-preset", "fast", "-acodec", "aac", "-b:a", "96k", outputPath]
-                            process = subprocess.Popen(args=videoCompressionCmd, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                            process = subprocess.run(args=videoCompressionCmd, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
                             stdout, stderr = process.communicate()
                             returnCode = process.returncode
